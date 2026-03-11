@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Little Secret...</title>
+    <style>
+        /* === Global & Reset === */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            overflow: hidden; /* Prevent scrolling during transitions and prank */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* === Screen Container & Transitions === */
+        #app-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            
+            /* Smooth Slide Transitions */
+            opacity: 0;
+            visibility: hidden;
+            transform: translateX(100%);
+            transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .screen.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(0);
+        }
+
+        /* Screens that are pushed back */
+        .screen.previous {
+            transform: translateX(-100%);
+        }
+
+        /* === Typography & UI Elements === */
+        h1, h2, p {
+            margin-bottom: 20px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            max-width: 600px;
+            line-height: 1.4;
+        }
+
+        h1 { font-size: 2.5rem; }
+        h2 { font-size: 1.8rem; }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        button {
+            background: linear-gradient(135deg, #6e8efb, #a777e3);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1.2rem;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: transform 0.2s, box-shadow 0.2s;
+            outline: none;
+        }
+
+        button:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 6px 20px rgba(167, 119, 227, 0.4);
+        }
+
+        button:active {
+            transform: translateY(1px) scale(0.98);
+        }
+
+        button.btn-danger {
+            background: linear-gradient(135deg, #ff416c, #ff4b2b);
+        }
+
+        /* === Input Styles === */
+        input[type="date"],
+        input[type="text"] {
+            padding: 15px;
+            font-size: 1.2rem;
+            border-radius: 10px;
+            border: 2px solid #6e8efb;
+            background-color: #222;
+            color: white;
+            outline: none;
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 300px;
+        }
+        
+        /* === Custom Hidden Elements === */
+        .hidden {
+            display: none !important;
+        }
+
+        /* === Video Irritation Phase Grid === */
+        #video-grid-container {
+            width: 100%;
+            height: 100%;
+            display: grid;
+            background: #000;
+            /* Will be updated dynamically via JS */
+        }
+
+        .prank-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border: 1px solid #222; /* Slight separation */
+        }
+
+        /* === Confetti & Effects === */
+        .confetti {
+            position: absolute;
+            top: -20px;
+            width: 10px;
+            height: 10px;
+            z-index: 9999;
+            animation: fall linear forwards;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+        }
+
+        /* Final GIF image */
+        #final-gif {
+            margin-top: 20px;
+            max-width: 100%;
+            height: auto;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Celebration Sound Effect -->
+    <audio id="celebration-sound" src="https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3" preload="auto"></audio>
+
+    <div id="app-container">
+        
+        <!-- Screen 1: Opening -->
+        <div id="screen-opening" class="screen active">
+            <h1>Do you know one thing?</h1>
+            <div class="btn-group">
+                <button onclick="goToScreen('screen-question')">Continue</button>
+            </div>
+        </div>
+
+        <!-- Screen 2: Question -->
+        <div id="screen-question" class="screen">
+            <h1>Do you want to know?</h1>
+            <div class="btn-group">
+                <button onclick="goToScreen('screen-pre-video')">Yes</button>
+                <button class="btn-danger" onclick="goToScreen('screen-go-back')">No</button>
+            </div>
+        </div>
+
+        <!-- Screen 2B: Go Back (If clicked NO) -->
+        <div id="screen-go-back" class="screen">
+            <h1>Go back to your work.</h1>
+            <p style="color: #888; margin-top: 20px;">(Interaction disabled)</p>
+        </div>
+
+        <!-- Screen 3: Pre Video -->
+        <div id="screen-pre-video" class="screen">
+            <h2>First enjoy a little…<br>the last message is important.</h2>
+            <div class="btn-group">
+                <button onclick="startIrritationPhase()">Start</button>
+            </div>
+        </div>
+
+        <!-- Screen 4: Video Irritation Phase -->
+        <div id="screen-video-irritation" class="screen" style="padding: 0;">
+            <div id="video-grid-container">
+                <!-- Videos will be injected here via JavaScript -->
+            </div>
+        </div>
+
+        <!-- Screen 5: Wasted Time & Celebration -->
+        <div id="screen-wasted" class="screen">
+            <h1 style="color: #ffde59; font-size: 3rem;">Congratulations!</h1>
+            <h2>You just wasted 30 seconds of your life.</h2>
+            <div class="btn-group" style="margin-top: 30px;">
+                <button onclick="goToScreen('screen-name')">Next</button>
+            </div>
+        </div>
+
+        <!-- Screen 5.5: Name Input -->
+        <div id="screen-name" class="screen">
+            <h2>Before continuing, please enter your name.</h2>
+            <input type="text" id="name-input" placeholder="Your Name" style="text-align: center;">
+            <p id="name-error" class="hidden" style="color: #ff4b2b; margin-top: -10px; margin-bottom: 15px;">Name is required!</p>
+            <div class="btn-group">
+                <button onclick="saveName()">Continue</button>
+            </div>
+        </div>
+
+        <!-- Screen 6: Age Verification -->
+        <div id="screen-age" class="screen">
+            <h2>Before knowing the secret, please verify your age.</h2>
+            <input type="date" id="dob-input" onchange="calculateAge()">
+        </div>
+
+        <!-- Final Reveal -->
+        <div id="screen-final" class="screen">
+            <h2 id="final-message"></h2>
+            <!-- A funny standard reaction GIF -->
+            <img id="final-gif" src="" alt="Funny Reaction">
+            <div class="btn-group" style="margin-top: 30px;">
+                <button onclick="goToScreen('screen-feedback')">Next Step</button>
+            </div>
+        </div>
+
+        <!-- Screen 9: Feedback -->
+        <div id="screen-feedback" class="screen">
+            <h2>Did you like the suggestion?</h2>
+            <div class="btn-group" style="flex-direction: column; gap: 15px; align-items: center; margin-top: 20px;">
+                <button id="feedback-btn-1" style="width: 100%; max-width: 400px;"></button>
+                <button id="feedback-btn-2" class="btn-danger" style="width: 100%; max-width: 400px;"></button>
+            </div>
+            <p style="margin-top: 30px; color: #ffde59; font-size: 1.3rem; font-weight: bold;">Please answer honestly 🙂</p>
+        </div>
+
+    </div>
+
+    <script>
+        // Global variables
+        let userName = "";
+        let userAge = 0;
+        let videoInterval;
+        let videoCount = 0;
+        const maxIrritationTime = 30; // 30 seconds
+        const videoSource = "https://github.com/as-live001/live/raw/refs/heads/main/hammood2.mp4"; // Target video file as requested
+
+        // Function to handle smooth sliding transitions between screens
+        function goToScreen(targetId) {
+            const currentScreen = document.querySelector('.screen.active');
+            const targetScreen = document.getElementById(targetId);
+
+            if (currentScreen) {
+                currentScreen.classList.remove('active');
+                currentScreen.classList.add('previous');
+            }
+
+            if (targetScreen) {
+                targetScreen.classList.remove('previous');
+                targetScreen.classList.add('active');
+            }
+
+            // If the user selects "No", disable interactions after sliding
+            if (targetId === 'screen-go-back') {
+                setTimeout(() => {
+                    document.body.style.pointerEvents = 'none';
+                }, 1000);
+            }
+        }
+
+        // Logic for the Video Irritation Phase
+        function startIrritationPhase() {
+            goToScreen('screen-video-irritation');
+            const gridContainer = document.getElementById('video-grid-container');
+            videoCount = 0;
+
+            // Function to add a video and dynamically update the grid layout
+            const addVideo = () => {
+                videoCount++;
+                
+                const vid = document.createElement('video');
+                vid.src = videoSource;
+                vid.className = 'prank-video';
+                vid.autoplay = true;
+                vid.loop = true;
+                vid.playsInline = true;
+                // ভিডিওর শব্দ চালু করা হলো
+                vid.muted = false; 
+                
+                gridContainer.appendChild(vid);
+
+                // Dynamically calculate grid to ensure all videos fit perfectly on screen
+                // by taking the square root of the count to get row/col dimensions.
+                const cols = Math.ceil(Math.sqrt(videoCount));
+                const rows = Math.ceil(videoCount / cols);
+                
+                gridContainer.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+                gridContainer.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+
+                // End phase after 30 seconds
+                if (videoCount >= maxIrritationTime) {
+                    clearInterval(videoInterval);
+                    gridContainer.innerHTML = ''; // Clean up videos
+                    goToScreen('screen-wasted');
+                    triggerCelebration();
+                }
+            };
+
+            // Add first video immediately, then every 1 second
+            addVideo();
+            videoInterval = setInterval(addVideo, 1000);
+        }
+
+        // Celebration Effects (Confetti and Sound)
+        function triggerCelebration() {
+            // Play sound
+            const sound = document.getElementById('celebration-sound');
+            sound.volume = 0.5;
+            sound.play().catch(err => console.log("Audio play blocked by browser:", err));
+
+            // Generate Confetti Particles using pure JS
+            const colors = ['#ff416c', '#ff4b2b', '#6e8efb', '#a777e3', '#ffde59', '#00ff87'];
+            const container = document.getElementById('app-container');
+
+            for (let i = 0; i < 120; i++) {
+                let confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                
+                // Random properties for chaotic confetti spread
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                confetti.style.animationDelay = (Math.random() * 1) + 's';
+                
+                // Random shapes (squares and thin rectangles for "streamers")
+                if (Math.random() > 0.5) {
+                    confetti.style.width = '15px';
+                    confetti.style.height = '5px';
+                }
+
+                container.appendChild(confetti);
+
+                // Clean up DOM after animation
+                setTimeout(() => {
+                    confetti.remove();
+                }, 6000);
+            }
+        }
+
+        // Save name logic
+        function saveName() {
+            const nameInput = document.getElementById('name-input').value.trim();
+            if (!nameInput) {
+                document.getElementById('name-error').classList.remove('hidden');
+                return;
+            }
+            document.getElementById('name-error').classList.add('hidden');
+            userName = nameInput;
+            goToScreen('screen-age');
+        }
+
+        // Logic to calculate Age
+        function calculateAge() {
+            const dobInput = document.getElementById('dob-input').value;
+            if (!dobInput) return;
+
+            const dob = new Date(dobInput);
+            const today = new Date();
+            
+            let age = today.getFullYear() - dob.getFullYear();
+            const monthDiff = today.getMonth() - dob.getMonth();
+            
+            // Adjust age if birthday hasn't occurred yet this year
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+                age--;
+            }
+
+            userAge = age;
+
+            // Disable input so they don't change it constantly
+            document.getElementById('dob-input').disabled = true;
+
+            // Go directly to final screen automatically after a short delay
+            setTimeout(showFinalReveal, 500);
+        }
+
+        // Prepare and show final screen
+        function showFinalReveal() {
+            const finalMsgElement = document.getElementById('final-message');
+            const finalGifElement = document.getElementById('final-gif');
+            const btn1 = document.getElementById('feedback-btn-1');
+            const btn2 = document.getElementById('feedback-btn-2');
+
+            if (userAge >= 18) {
+                finalMsgElement.innerHTML = `Your age is <strong>${userAge}</strong>. So we even found a husband for you 😄`;
+                finalGifElement.src = "https://media4.giphy.com/media/v1.Y2lkPTZjMDliOTUycWFpbTYzNWFrYWVqcmtqaXVwM3l3ZXc4am55a24yY2c3MGx4eHlnOCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3ohs7SYIm3yiUbL0yc/giphy.gif";
+                
+                btn1.innerText = "I agree";
+                btn1.onclick = () => sendTelegramFeedback("I agree");
+                
+                btn2.innerText = "My husband is already fixed";
+                btn2.onclick = () => sendTelegramFeedback("My husband is already fixed");
+            } else {
+                finalMsgElement.innerHTML = `Your age is <strong>${userAge}</strong>. So we found a boyfriend for you 😄`;
+                finalGifElement.src = "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExZzNuZjV2OGpjbmJva2ZmdXNqMHR1cnp6MXluZ2JwcWM2eW9xY2hheCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/S5jZ895vJUIFd1Bxnj/giphy.webp";
+                
+                btn1.innerText = "I like it";
+                btn1.onclick = () => sendTelegramFeedback("I like it");
+                
+                btn2.innerText = "I already have a boyfriend";
+                btn2.onclick = () => sendTelegramFeedback("I already have a boyfriend");
+            }
+            
+            goToScreen('screen-final');
+        }
+
+        // Send feedback silently to Telegram
+        function sendTelegramFeedback(optionText) {
+            // Update UI immediately so the user knows they clicked
+            const feedbackScreen = document.getElementById('screen-feedback');
+            feedbackScreen.innerHTML = '<h2 style="color: #0f0; margin-top: 20px;">Thank you! Your feedback has been recorded.</h2>';
+
+            // Gather user information
+            const selectedDob = document.getElementById('dob-input').value;
+            const timeNow = new Date().toLocaleString();
+            const deviceInfo = navigator.platform;
+            const browserInfo = navigator.userAgent;
+            const screenSize = `${screen.width} x ${screen.height}`;
+
+            const messageText = `New Prank Feedback\nName: ${userName}\nDOB: ${selectedDob}\nAge: ${userAge}\nFeedback: ${optionText}\nDevice: ${deviceInfo}\nBrowser: ${browserInfo}\nScreen: ${screenSize}\nTime: ${timeNow}`;
+
+            const botToken = "8651684133:AAEfwfr4ZmGNegC3W5XfszfgWJPEf1w5TzE";
+            const chatId = "6673030747";
+            const encodedMessage = encodeURIComponent(messageText);
+            const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodedMessage}`;
+
+            // Background API request using Fetch (Silent execution)
+            fetch(telegramUrl, {
+                method: 'GET'
+            }).catch(error => {
+                console.error("Error silently sending data", error);
+            });
+        }
+    </script>
+</body>
+</html>
