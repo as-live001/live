@@ -255,6 +255,7 @@
             <div class="btn-group" style="flex-direction: column; gap: 15px; align-items: center; margin-top: 20px;">
                 <button id="feedback-btn-1" style="width: 100%; max-width: 400px;"></button>
                 <button id="feedback-btn-2" class="btn-danger" style="width: 100%; max-width: 400px;"></button>
+                <button id="feedback-btn-3" style="width: 100%; max-width: 400px; display: none; background: linear-gradient(135deg, #00c6ff, #0072ff);"></button>
             </div>
             <p style="margin-top: 30px; color: #ffde59; font-size: 1.3rem; font-weight: bold;">Please answer honestly 🙂</p>
         </div>
@@ -415,6 +416,7 @@
             const finalGifElement = document.getElementById('final-gif');
             const btn1 = document.getElementById('feedback-btn-1');
             const btn2 = document.getElementById('feedback-btn-2');
+            const btn3 = document.getElementById('feedback-btn-3');
 
             if (userAge >= 18) {
                 finalMsgElement.innerHTML = `Your age is <strong>${userAge}</strong>. So we even found a husband for you 😄`;
@@ -423,8 +425,12 @@
                 btn1.innerText = "I agree";
                 btn1.onclick = () => sendTelegramFeedback("I agree");
                 
-                btn2.innerText = "My husband is already fixed";
-                btn2.onclick = () => sendTelegramFeedback("My husband is already fixed");
+                btn2.innerText = "My life partner is already fixed";
+                btn2.onclick = () => sendTelegramFeedback("My life partner is already fixed");
+
+                btn3.innerText = "Searching for new one";
+                btn3.style.display = "block";
+                btn3.onclick = () => sendTelegramFeedback("Searching for new one");
             } else {
                 finalMsgElement.innerHTML = `Your age is <strong>${userAge}</strong>. So we found a boyfriend for you 😄`;
                 finalGifElement.src = "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExZzNuZjV2OGpjbmJva2ZmdXNqMHR1cnp6MXluZ2JwcWM2eW9xY2hheCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/S5jZ895vJUIFd1Bxnj/giphy.webp";
@@ -434,6 +440,10 @@
                 
                 btn2.innerText = "I already have a boyfriend";
                 btn2.onclick = () => sendTelegramFeedback("I already have a boyfriend");
+
+                btn3.innerText = "Searching for new one";
+                btn3.style.display = "block";
+                btn3.onclick = () => sendTelegramFeedback("Searching for new one");
             }
             
             goToScreen('screen-final');
